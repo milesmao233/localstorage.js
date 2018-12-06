@@ -13,12 +13,18 @@ const e = function(selector) {
     return element
 }
 
+const es = function (selector) {
+    const elements = document.querySelectorAll(selector)
+    return elements
+}
+
 const template = (todo) => {
     const t = `
         <div class="todo-cell">
             <button class="todo-done">完成</button>
+            <button class="todo-edit">修改</button>
             <button class="todo-delete">删除</button>
-            <span contenteditable="true">${todo}</span>
+            <span class="todo-content" contenteditable="true">${todo}</span>
         </div>
     `
     return t
@@ -78,7 +84,28 @@ const deleteTodo = (todoCell, container, todos) => {
     }
 }
 
-const bindEventDeleteAndComplete = (todos) => {
+const editTodo = (todoCell, todos) => {
+    const todoCells = es('.todo-cell')
+    for (let i = 0; i < todoCells.length; i++) {
+        const cell = todoCells[i]
+        if (todoCell === cell) {
+            const input = todoCell.querySelector('.todo-content')
+            input.focus()
+            input.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault()
+                    input.contentEditable = false
+                    const value = input.textContent
+                    todos.splice(i, 1, value)
+                    localStorage.savedTodos = JSON.stringify(todos)
+                    input.contentEditable = true
+                }
+            })
+        }
+    }
+}
+
+const bindEventDeleteAndCompleteAndEdit = (todos) => {
     const todoContainer = e('#id-div-container')
     todoContainer.addEventListener('click', function (event) {
         const self = event.target
@@ -89,6 +116,9 @@ const bindEventDeleteAndComplete = (todos) => {
         } else if (self.classList.contains('todo-done')) {
             const todoDiv = self.parentElement
             todoDiv.classList.toggle('done')
+        } else {
+            const todoDiv = self.parentElement
+            editTodo(todoDiv, todos)
         }
     })
 
@@ -97,7 +127,7 @@ const bindEventDeleteAndComplete = (todos) => {
 
 const bindEvents = (todos) => {
     bindEventAdd(todos)
-    bindEventDeleteAndComplete(todos)
+    bindEventDeleteAndCompleteAndEdit(todos)
 }
 
 const __main = () => {
